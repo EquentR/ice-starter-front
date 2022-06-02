@@ -1,28 +1,39 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <index class="foreground"></index>
+    <br/>
+    <siteIcon></siteIcon>
+    <br/>
+    <beautyNotes></beautyNotes>
+    <background class="background"></background>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
 
+import index from "@/components";
+import background from "@/components/background";
+import siteIcon from "@/components/site-icon";
+import beautyNotes from "@/components/beauty-notes";
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    index,
+    background,
+    siteIcon,
+    beautyNotes,
   }
 }
 </script>
 
 <style>
+.background {
+  z-index: -1;
+}
+.foreground {
+  z-index: 0;
+}
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+
 }
 </style>
