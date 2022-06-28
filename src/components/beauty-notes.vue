@@ -1,10 +1,12 @@
 <template>
   <div class="note-box">
-    <el-tooltip class="item" effect="dark" content="点我复制" placement="top" :visible-arrow="false" :hide-after="2000">
+    <el-tooltip class="item" effect="dark" content="左键复制，右键刷新" placement="top" :visible-arrow="false" :hide-after="2000">
       <div class="note"
            v-clipboard:copy="copyContent"
            v-clipboard:success="onCopy"
-           v-clipboard:error="onError" @mouseenter="mouseIn" @mouseleave="mouseOut">
+           v-clipboard:error="onError"
+           @mouseenter="mouseIn"
+           @mouseleave="mouseOut" @contextmenu.prevent="getNote">
         <p>「&nbsp&nbsp{{ noteJson.hitokoto }}&nbsp&nbsp」</p>
         <p ref="origin"
            style="font-style: italic;font-size: 12px;transition: 0.25s;opacity: 0">
@@ -95,7 +97,7 @@ export default {
   color: #e5f2f8;
   font-size: 13px;
   font-weight: 500;
-  text-shadow: 0px 0px 5px #0000001A;;
+  text-shadow: 0px 0px 5px #0000001A;
   padding: 0.5em 1em;
   margin-top: 1em;
   transition: 0.2s;
@@ -121,11 +123,23 @@ export default {
     width: 90vw !important;
   }
 }
+
 /*当屏幕宽度大于1700px生效*/
 @media screen and (min-width: 1700px) {
   .note{
     width: 35vw !important;
   }
 }
-
+/*当屏幕宽度小于600且高度小于745，不显示句子*/
+@media screen and (max-width: 600px) and  (max-height: 745px){
+  .note-box{
+    visibility: hidden;
+  }
+}
+/*当屏幕高度小于550，不显示句子*/
+@media screen and (max-height: 550px){
+  .note-box{
+    visibility: hidden;
+  }
+}
 </style>

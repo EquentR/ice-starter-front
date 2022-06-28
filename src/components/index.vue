@@ -1,9 +1,8 @@
 <template>
   <div>
-    <div class="main">
-      <br/><br/><br/>
-      <h1 style="color: white;text-shadow: 0px 3px 10px #0000001A;font-size: 2.5em;cursor: default">{{ nowTime }}</h1>
-      <h3 style="color: white;text-shadow: 0px 3px 10px #0000001A;cursor: default">冰清起始页正在建设中...</h3>
+    <div class="naviMain">
+      <h1 style="color: white;text-shadow: 0px 3px 10px #0000001A;font-size: 3em;cursor: default">{{ nowTime }}</h1>
+      <h3 style="color: white;text-shadow: 0px 3px 10px #0000001A;cursor: default"><!--冰清起始页正在建设中...--></h3>
       <el-autocomplete
           placeholder="请输入搜索内容..."
           class="searchClass"
@@ -37,6 +36,7 @@
 <script>
 
 import SiteIcon from "@/components/site-icon";
+import userSettingApi from "@/api/userSettingApi";
 export default {
   name: "index",
   components: {SiteIcon},
@@ -90,7 +90,9 @@ export default {
               ? "0" + myDate.getMinutes()
               : myDate.getMinutes()
       );
-      this.nowTime = hou + " : " + min;
+      if (this.nowTime !== hou + " : " + min) {
+        this.nowTime = hou + " : " + min;
+      }
     }
   },
   filters: {
@@ -104,13 +106,26 @@ export default {
     },
     engine() {
       localStorage.setItem("engine",this.engine)
+      userSettingApi.update({
+        searchEngine: this.engine
+      }, localStorage.getItem("jwt"))
     }
   },
-  mounted() {
+  async mounted() {
     this.setTime();
     this.timer = setInterval(() => {
       this.setTime();
-    }, 2000);
+    }, 1000);
+
+    await userSettingApi.get(localStorage.getItem("jwt")).then(
+      response => {
+        let engine = response.data.data.searchEngine
+        if (engine !== null) {
+          localStorage.setItem("engine", engine)
+        }
+
+      }
+    )
     //搜索引擎偏好设定
     let engine = localStorage.getItem("engine")
     if (engine !== null) {
@@ -126,30 +141,16 @@ export default {
 </script>
 
 <style scoped>
-
-
-.searchBox {
-  height: 30px;
-  width: 40%;
-  font-size: 20px;
-  border-radius: 10px;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-.searchButton {
-  height: 35px;
-  width: 10%;
-  border-radius: 10px;
-}
 a{
   text-decoration:none;
 }
-.main{
+.naviMain{
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #000000;
+  margin-top: 12vh;
 }
 </style>
 
@@ -162,23 +163,16 @@ a{
   /*border: 1px solid #c5c5c5;*/
   border-radius: 20px;
   background: #e5e5e5;
-  width: 45vw !important;
+  width: 600px !important;
   opacity: 0.8;
   box-shadow: 0px 3px 10px #0000001A;
-  transition: 0.2s;
-  transition-timing-function: ease-in-out;
-
+  /*transition: 0.2s;*/
+  /*transition-timing-function: ease-in-out;*/
 }
 /*当屏幕宽度小于960px生效*/
-@media screen and (max-width: 960px) {
+@media screen and (max-width: 667px) {
   .searchClass{
     width: 90vw !important;
-  }
-}
-/*当屏幕宽度大于1700px生效*/
-@media screen and (min-width: 1700px) {
-  .searchClass{
-    width: 35vw !important;
   }
 }
 
