@@ -116,8 +116,8 @@ export default {
     this.timer = setInterval(() => {
       this.setTime();
     }, 1000);
-
-    await userSettingApi.get(localStorage.getItem("jwt")).then(
+    let jwt = localStorage.getItem("jwt")
+    await userSettingApi.get(jwt).then(
       response => {
         let engine = response.data.data.searchEngine
         if (engine !== null) {

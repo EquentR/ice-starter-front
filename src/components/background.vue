@@ -33,9 +33,10 @@
     </el-dropdown>
 
 
+    <input v-show="false" value="粤ICP备2022066970号-1" id="beian"></input>
     <footer id="footer-beian">
       ©&nbsp;2022&nbsp;&nbsp;冰清起始页 |
-      <a href="https://beian.miit.gov.cn/" target="_blank">
+      <a href="javascript:void(0)" @click="copyBeian">
         粤ICP备2022066970号-1
       </a>
     </footer>
@@ -98,6 +99,25 @@ export default {
     }
   },
   methods: {
+    copyBeian() {
+      /*let beian = document.getElementById("beian");
+      beian.select();
+      document.execCommand("copy")*/
+      navigator.clipboard.writeText("粤ICP备2022066970号-1").then(
+        () => {
+          this.$notify({
+            title: '成功',
+            message: '备案号复制成功，正在跳转到工信部',
+            type: 'success',
+            duration: 2000,
+            position: 'top-right'
+          });
+          setTimeout(() => {
+            window.open("https://beian.miit.gov.cn/", "_blank")
+          }, 1000)
+        }
+      )
+    },
     handleCommand(e) {
       if (e === 'a') {
         this.changeBackgroundVisible = true
@@ -176,12 +196,14 @@ export default {
         localStorage.setItem("background",this.imgBase64.toString())
         this.isBackgroundChange = false
         //this.imgBase64 = ''
-        let jwt = localStorage.getItem("jwt")
-        this.userSetting= {
-          darkMode: this.is_dark ? 1 : 0,
-          background: this.imgBase64,
+        if (this.isLogin) {
+          let jwt = localStorage.getItem("jwt")
+          this.userSetting= {
+            darkMode: this.is_dark ? 1 : 0,
+            background: this.imgBase64,
+          }
+          userSettingApi.update(this.userSetting, jwt)
         }
-        userSettingApi.update(this.userSetting, jwt)
       }
       this.changeBackgroundVisible = false;
     },
@@ -266,9 +288,12 @@ export default {
           });
         }
       }
-      userSettingApi.update({
-        darkMode: this.is_dark ? 1 : 0
-      }, localStorage.getItem("jwt"))
+      if(this.isLogin) {
+        userSettingApi.update({
+          darkMode: this.is_dark ? 1 : 0
+        }, localStorage.getItem("jwt"))
+      }
+
     }
   },
   async mounted() {
@@ -280,6 +305,8 @@ export default {
         async response => {
           this.userInfo = response.data.data
           this.isLogin = true
+          let newJwt = response.headers.token;
+          localStorage.setItem("jwt", newJwt);
           await userSettingApi.get(jwt).then(
             response => {
               let dark = response.data.data.darkMode === 1;
@@ -304,7 +331,7 @@ export default {
       )
     }
     let back = localStorage.getItem("background");
-    if (back !== null) {
+    if (back !== null && back !== "null") {
       document.body.style.background =
           `url("${back}") no-repeat center`;
     } else {
@@ -360,6 +387,7 @@ footer{
   color: white;
   font-size: 12px;
   margin-bottom: -75px;
+  z-index: 10;
 }
 footer a {
   color: white;
