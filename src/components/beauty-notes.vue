@@ -99,7 +99,7 @@ export default {
   font-weight: 500;
   text-shadow: 0px 0px 5px #0000001A;
   padding: 0.5em 1em;
-  margin-top: 1em;
+  margin-top: 2em;
   transition: 0.2s;
   transition-timing-function: ease-in-out;
   border-radius: 20px;

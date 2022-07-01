@@ -1,28 +1,58 @@
 <template>
   <div class="sites">
-    <div class="favorite-site" v-for="item in favorites" @click="jumpTo(item.url)">
+    <div class="favorite-site"
+         v-for="(item, i) in favorites"
+         @click="jumpTo(item.url)"
+         @contextmenu.prevent="changeSite(i)">
       <div class="icon" :style="`background-color: ${item.color}`">
         {{ item.name.substring(0,1) }}
       </div>
       <span style="text-shadow: 0px 3px 10px rgba(0,0,0,0.34);">{{ item.name }}</span>
     </div>
-<!--    <div class="favorite-site" @click="newSiteVisible = true">
+    <div class="favorite-site" @click="changeSite(-1)" v-show="favorites.length < 12">
       <div class="icon" style="background-color: rgba(190,190,190,0.3)">
         +
       </div>
       <span style="text-shadow: 0px 3px 10px rgba(0,0,0,0.34);">添加</span>
     </div>
-    <el-dialog title="新建网址收藏"
+<!--  网址弹出框  -->
+    <el-dialog title="编辑网址收藏"
                :visible.sync="newSiteVisible"
                class="text-dialog"
-               width="40vw"
+               width="30vw"
                :close-on-click-modal="false">
-      <span>请输入标题：</span>
-      <input type="text" class="text-title" id="text-title" autocomplete="off"></input><br/>
-      <span style="padding-top: 15px">请输入内容：</span>
-      <input type="text" class="text-title" id="text-title" autocomplete="off"></input><br/>
-      <button class="submit-text" @click="addSite">提交</button>
-    </el-dialog>-->
+      <el-form :rules="rules">
+        <el-form-item label="请输入网址" prop="url">
+          <el-input
+              placeholder="请输入网址内容"
+              v-model="tempSite"
+              clearable>
+          </el-input>
+        </el-form-item>
+        <el-form-item label="请输入名称">
+          <el-input
+              placeholder="请输入名称"
+              v-model="tempName"
+              clearable>
+          </el-input>
+        </el-form-item>
+        <div style="height: 10px"></div>
+        <el-form-item label="请选择图标颜色">
+          <span>
+            <el-color-picker
+                v-model="tempColor"
+                :predefine="defaultColor"
+                size="medium"
+                color-format="hex">
+            </el-color-picker>
+          </span><br/>
+        </el-form-item>
+        <el-form-item style="text-align: right">
+          <el-button type="danger" @click="deleteItem" :disabled="!canDelete">删除</el-button>
+          <el-button type="primary" @click="submitChange">提交</el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
   </div>
 </template>
 
@@ -38,8 +68,19 @@ export default {
         {url: "https://map.baidu.com", name: '地图', color: '#00b677'},
         {url: "https://translate.google.cn/", name: '谷歌翻译', color: '#5290f5'},
         {url: "https://www.youdao.com", name: '有道翻译', color: '#f84a4a'},
+
       ],
       newSiteVisible: false,
+      tempColor: "#528eec",
+      tempSite: "",
+      tempName: "",
+      tempIndex: 0,
+      canDelete: false,
+      defaultColor: ["#ff6cb2","#0082ff","#00b677","#ff6d38"],
+      //输入框规则
+      rules: {
+        url: {type: "url"}
+      }
     }
   },
   methods: {
@@ -48,12 +89,90 @@ export default {
     },
     addSite() {
 
+    },
+    changeSite(index) {
+      if (index !== -1) {
+        this.tempSite = this.favorites[index].url
+        this.tempName = this.favorites[index].name
+        this.tempColor = this.favorites[index].color
+        this.tempIndex = index
+        this.canDelete = true
+      } else {
+        this.tempIndex = -1
+        this.tempSite = ''
+        this.tempName = ''
+        this.canDelete = false
+      }
+      this.newSiteVisible = true
+    },
+    deleteItem() {
+      this.$confirm('您要删除这个项目吗?', '警告', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.favorites.splice(this.tempIndex, 1)
+        this.newSiteVisible = false;
+        //TODO
+      })
+    },
+    submitChange() {
+      let urlRule = /^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\*\+,;=.]+$/
+      let isValid = urlRule.test(this.tempSite)
+      let isEmpty = this.tempName === '' || this.tempColor === '' || this.tempColor === null
+      if (isValid && !isEmpty) {
+        this.tempSite = this.tempSite.startsWith("http") ? this.tempSite : "https://" + this.tempSite
+        if (this.tempIndex >= 0) {
+          this.favorites[this.tempIndex].color = this.tempColor
+          this.favorites[this.tempIndex].url = this.tempSite
+          this.favorites[this.tempIndex].name = this.tempName
+        } else {
+          this.favorites.push({
+            url: this.tempSite,
+            name: this.tempName,
+            color: this.tempColor
+          })
+        }
+        this.newSiteVisible = false
+      } else {
+        if (!isValid) {
+          this.$alert('网址似乎不合法呢！', '错误', {
+            confirmButtonText: '确定',
+            type: "error"
+          });
+        }
+        if (isEmpty) {
+          this.$alert('东西似乎没填写完呢！', '错误', {
+            confirmButtonText: '确定',
+            type: "error"
+          });
+        }
+      }
+
+    }
+  },
+  watch: {
+    favorites: {
+      handler() {
+        localStorage.setItem("site", JSON.stringify(this.favorites))
+      },
+      deep: true
+    }
+  },
+  created() {
+    var item = localStorage.getItem("site");
+    if (item !== 'null' && item !== null) {
+      this.favorites = JSON.parse(item)
     }
   }
 }
 </script>
 
 <style scoped>
+.input-name {
+  /*margin-top: 10px;*/
+}
+
 .icon {
   width: 50px;
   height: 50px;
@@ -149,5 +268,18 @@ export default {
 .el-dialog__body{
   padding-top: 20px !important;
   padding-bottom: 20px !important;
+}
+.el-color-picker--medium .el-color-picker__trigger {
+  height: 50px !important;
+  width: 50px !important;
+}
+.el-color-picker__icon {
+  display: none !important;
+}
+.el-form-item {
+  margin-bottom: 5px !important;
+}
+.el-form-item__content {
+  line-height: 30px !important;
 }
 </style>
