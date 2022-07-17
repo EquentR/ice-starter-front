@@ -106,9 +106,12 @@ export default {
     },
     engine() {
       localStorage.setItem("engine",this.engine)
-      userSettingApi.update({
-        searchEngine: this.engine
-      }, localStorage.getItem("jwt"))
+      let login = localStorage.getItem("login")
+      if (login === "1") {
+        userSettingApi.update({
+          searchEngine: this.engine
+        }, localStorage.getItem("jwt"))
+      }
     }
   },
   async mounted() {
@@ -117,15 +120,18 @@ export default {
       this.setTime();
     }, 1000);
     let jwt = localStorage.getItem("jwt")
-    await userSettingApi.get(jwt).then(
-      response => {
-        let engine = response.data.data.searchEngine
-        if (engine !== null) {
-          localStorage.setItem("engine", engine)
-        }
+    let isLogin = localStorage.getItem("login");
+    if (isLogin === "1") {
+      await userSettingApi.get(jwt).then(
+          response => {
+            let engine = response.data.data.searchEngine
+            if (engine !== null) {
+              localStorage.setItem("engine", engine)
+            }
 
-      }
-    )
+          }
+      )
+    }
     //搜索引擎偏好设定
     let engine = localStorage.getItem("engine")
     if (engine !== null) {

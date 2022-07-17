@@ -26,6 +26,7 @@
       </span>
       <el-dropdown-menu slot="dropdown">
         <el-dropdown-item command="a">更换壁纸</el-dropdown-item>
+        <el-dropdown-item command="b" divided>修改密码</el-dropdown-item>
 <!--        <el-dropdown-item command="b">登录</el-dropdown-item>-->
 <!--        <el-dropdown-item disabled>双皮奶</el-dropdown-item>-->
 <!--        <el-dropdown-item divided>蚵仔煎</el-dropdown-item>-->
@@ -123,7 +124,7 @@ export default {
         this.changeBackgroundVisible = true
       } else if (e === 'b') {
         this.$router.push({
-          name: 'login'
+          name: 'changePass'
         })
       }
     },
@@ -215,6 +216,13 @@ export default {
           `url("${this.theme.pictureUrl}") no-repeat center`;
       document.body.style.backgroundSize = `cover`;
       document.body.style.backgroundAttachment = 'fixed';
+      if (this.isLogin) {
+        let jwt = localStorage.getItem("jwt")
+        this.userSetting= {
+          background: '',
+        }
+        userSettingApi.update(this.userSetting, jwt)
+      }
     },
     loginOut() {
       if (this.isLogin) {
@@ -238,6 +246,7 @@ export default {
         userApi.logout(jwt).then(
           response => {
             localStorage.removeItem("jwt");
+            localStorage.setItem("login", "0");
             this.$notify({
               title: '成功',
               message: `已退出登录`,
@@ -297,7 +306,7 @@ export default {
     }
   },
   async mounted() {
-
+    localStorage.setItem("login", "0");
     //登录状态校验
     let jwt = localStorage.getItem("jwt");
     if (jwt !== null && jwt !== '') {
@@ -305,13 +314,16 @@ export default {
         async response => {
           this.userInfo = response.data.data
           this.isLogin = true
+          localStorage.setItem("login", "1");
           let newJwt = response.headers.token;
           localStorage.setItem("jwt", newJwt);
           await userSettingApi.get(jwt).then(
             response => {
               let dark = response.data.data.darkMode === 1;
               let image = response.data.data.background;
-              localStorage.setItem("background", image);
+              if (image !== '' && image !== null) {
+                localStorage.setItem("background", image);
+              }
               localStorage.setItem("dark", dark);
               this.is_dark = dark === true;
             }
@@ -320,6 +332,7 @@ export default {
       ).catch(
         error => {
           localStorage.removeItem("jwt");
+          localStorage.setItem("login", "0");
           this.$notify({
             title: '错误',
             message: `${error.response.data.data}`,
@@ -331,7 +344,7 @@ export default {
       )
     }
     let back = localStorage.getItem("background");
-    if (back !== null && back !== "null") {
+    if (back !== null && back !== "null" && back !== '') {
       document.body.style.background =
           `url("${back}") no-repeat center`;
     } else {

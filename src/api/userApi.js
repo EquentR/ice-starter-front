@@ -21,6 +21,12 @@ export default {
       url: `${this.api}/sendEmailCode?email=${email}`
     })
   },
+  sendCodeIgnoreRegist(email) {
+    return axios({
+      method: 'GET',
+      url: `${this.api}/sendEmailCodeIgnore?email=${email}`
+    })
+  },
   //注册
   register(user, code) {
     return axios({
@@ -43,6 +49,22 @@ export default {
       method: 'GET',
       url: `${this.api}/logout`,
       headers: {'token' : jwt},
+    })
+  },
+  //忘记密码
+  modifyPasswordByCode(userInfo) {
+    return axios({
+      method: 'POST',
+      url: `${this.api}/modifyPasswordByCode`,
+      data: userInfo
+    })
+  },
+  //修改密码
+  modifyPasswordByOld(userInfo) {
+    return axios({
+      method: 'POST',
+      url: `${this.api}/modifyPasswordByOld`,
+      data: userInfo
     })
   }
 }

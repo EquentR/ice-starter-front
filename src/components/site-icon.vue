@@ -57,19 +57,12 @@
 </template>
 
 <script>
+import siteSettingApi from "@/api/siteSettingApi";
 export default {
   name: "site-icon",
   data() {
     return {
-      favorites: [
-        {url: "https://www.bilibili.com", name: '哔哩哔哩', color: '#ff6cb2'},
-        {url: "https://www.acfun.cn", name: 'AcFun', color: '#ff6d38'},
-        {url: "https://www.baidu.com", name: '百度', color: '#0082ff'},
-        {url: "https://map.baidu.com", name: '地图', color: '#00b677'},
-        {url: "https://translate.google.cn/", name: '谷歌翻译', color: '#5290f5'},
-        {url: "https://www.youdao.com", name: '有道翻译', color: '#f84a4a'},
-
-      ],
+      favorites: [],
       newSiteVisible: false,
       tempColor: "#528eec",
       tempSite: "",
@@ -151,18 +144,77 @@ export default {
 
     }
   },
+  computed: {
+    favoritesCopy() {
+      return JSON.stringify(this.favorites)
+    }
+  },
   watch: {
-    favorites: {
-      handler() {
+    favoritesCopy: {
+      handler(newList, oldList) {
         localStorage.setItem("site", JSON.stringify(this.favorites))
+        let isLogin = localStorage.getItem("login");
+        if (isLogin === "1") {
+          if (newList !== oldList){
+            let jwt = localStorage.getItem("jwt");
+            siteSettingApi.update(jwt, this.favorites)
+          }
+        }
       },
       deep: true
     }
   },
-  created() {
-    var item = localStorage.getItem("site");
-    if (item !== 'null' && item !== null) {
-      this.favorites = JSON.parse(item)
+  async created() {
+    let item = localStorage.getItem("site");
+    let isLogin = localStorage.getItem("login");
+    if (isLogin === "1") {
+      let jwt = localStorage.getItem("jwt");
+      await siteSettingApi.get(jwt).then(
+          async res => {
+            let fav = res.data.data
+            if (fav !== null) {
+              localStorage.setItem("site", JSON.stringify(fav))
+            } else {
+              if (item !== null && JSON.stringify(item) !== JSON.stringify(fav)) {
+                await siteSettingApi.update(jwt, JSON.parse(item))
+              } else {
+                let sites = [
+                  {url: "https://www.bilibili.com", name: '哔哩哔哩', color: '#ff6cb2'},
+                  {url: "https://www.acfun.cn", name: 'AcFun', color: '#ff6d38'},
+                  {url: "https://www.baidu.com", name: '百度', color: '#0082ff'},
+                  {url: "https://map.baidu.com", name: '地图', color: '#00b677'},
+                  {url: "https://translate.google.cn/", name: '谷歌翻译', color: '#5290f5'},
+                  {url: "https://www.youdao.com", name: '有道翻译', color: '#f84a4a'},
+                ]
+                localStorage.setItem("site", JSON.stringify(sites))
+              }
+            }
+          }
+      ).catch(
+          error => {
+            this.$notify({
+              title: '错误',
+              message: `${error.response.data.data}`,
+              type: 'error',
+              duration: 5000,
+              position: 'top-right'
+            });
+          }
+      )
+    }
+
+    let siteItem = localStorage.getItem("site");
+    if (siteItem !== 'null' && siteItem !== null) {
+      this.favorites = JSON.parse(siteItem)
+    } else {
+      this.favorites = [
+        {url: "https://www.bilibili.com", name: '哔哩哔哩', color: '#ff6cb2'},
+        {url: "https://www.acfun.cn", name: 'AcFun', color: '#ff6d38'},
+        {url: "https://www.baidu.com", name: '百度', color: '#0082ff'},
+        {url: "https://map.baidu.com", name: '地图', color: '#00b677'},
+        {url: "https://translate.google.cn/", name: '谷歌翻译', color: '#5290f5'},
+        {url: "https://www.youdao.com", name: '有道翻译', color: '#f84a4a'},
+      ]
     }
   }
 }
@@ -204,13 +256,20 @@ export default {
   position: center;
 }
 .sites {
-  width: 38em;
+  width: 37.8em;
   height: 10em;
   margin: auto;
 }
-@media screen and (max-width: 600px) {
+@media screen and (max-width: 600px) and (min-width: 401px) {
   .sites {
-    width: 19em;
+    width: 25.2em;
+    height: 15em;
+    margin: auto;
+  }
+}
+@media screen and (max-width: 400px) {
+  .sites {
+    width: 18.9em;
     height: 20em;
     margin: auto;
   }

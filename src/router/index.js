@@ -4,6 +4,8 @@ import login from "@/components/login";
 import naviMain from "@/components/navi-main";
 import register from "@/components/register";
 import messageBox from "element-ui/packages/message-box";
+import forgetPass from "@/components/forget-pass";
+import changePass from "@/components/change-pass";
 
 export default new VueRouter({
   mode: "history",
@@ -34,6 +36,16 @@ export default new VueRouter({
       name: 'register',
       component: register
     },
+    {
+      path: '/forgetPass',
+      name: 'forgetPass',
+      component: forgetPass
+    },
+    {
+      path: '/changePass',
+      name: 'changePass',
+      component: changePass
+    }
   ]
 
 })
