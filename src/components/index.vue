@@ -14,7 +14,8 @@
           @select="handleSelect"
           :trigger-on-focus="false"
           :popper-append-to-body="true"
-          @keyup.enter.native="search">
+          @keyup.enter.native="search"
+          clearable>
         <div slot="prepend">
           <div class="centerClass">
             <el-select v-model="engine" placeholder="请选择" style="width: 100px" default-first-option>
@@ -37,6 +38,7 @@
 
 import SiteIcon from "@/components/site-icon";
 import userSettingApi from "@/api/userSettingApi";
+import engineApi from "@/api/engineApi";
 export default {
   name: "index",
   components: {SiteIcon},
@@ -47,11 +49,7 @@ export default {
       suggest: [],
       is_dark: true,
       nowTime: '',
-      engines: [
-          {name: '百度', target: 'https://www.baidu.com/s?ie=UTF-8&wd='},
-          {name: '必应', target: 'https://cn.bing.com/search?q='},
-          {name: '360搜索', target: 'https://www.so.com/s?q='}
-      ]
+      engines: []
     }
   },
   methods: {
@@ -93,6 +91,10 @@ export default {
       if (this.nowTime !== hou + " : " + min) {
         this.nowTime = hou + " : " + min;
       }
+    },
+    //重新获取引擎
+    reSetEngines(engines) {
+      this.engines = engines
     }
   },
   filters: {
@@ -112,9 +114,21 @@ export default {
           searchEngine: this.engine
         }, localStorage.getItem("jwt"))
       }
+    },
+    engines: {
+      deep: true,
+      handler() {
+        localStorage.setItem("engineSetting", JSON.stringify(this.engines))
+        let login = localStorage.getItem("login")
+        if (login === "1") {
+          engineApi.update(localStorage.getItem("jwt"), this.engines)
+        }
+
+      }
     }
   },
   async mounted() {
+    this.$bus.$on('reSetEngines', this.reSetEngines)
     this.setTime();
     this.timer = setInterval(() => {
       this.setTime();
@@ -123,19 +137,49 @@ export default {
     let isLogin = localStorage.getItem("login");
     if (isLogin === "1") {
       await userSettingApi.get(jwt).then(
-          response => {
-            let engine = response.data.data.searchEngine
-            if (engine !== null) {
-              localStorage.setItem("engine", engine)
-            }
-
+        response => {
+          let engine = response.data.data.searchEngine
+          if (engine !== null) {
+            localStorage.setItem("engine", engine)
           }
+        }
       )
     }
     //搜索引擎偏好设定
+    if (isLogin === "1") {
+      await engineApi.get(jwt).then(
+        res => {
+          let engines = res.data.data
+          localStorage.removeItem("engineSetting")
+          localStorage.setItem("engineSetting", JSON.stringify(engines))
+        }
+      ).catch(
+        error => {
+          this.engines = [
+            {name: '百度', target: 'https://www.baidu.com/s?ie=UTF-8&wd=', sort: 0},
+            {name: '必应', target: 'https://cn.bing.com/search?q=', sort: 1},
+            {name: '360搜索', target: 'https://www.so.com/s?q=', sort: 2}
+          ]
+        }
+      )
+    }
+    let engineSetting = localStorage.getItem("engineSetting")
+    console.log(engineSetting)
+    if (engineSetting === null) {
+      this.engines = [
+        {name: '百度', target: 'https://www.baidu.com/s?ie=UTF-8&wd=', sort: 0},
+        {name: '必应', target: 'https://cn.bing.com/search?q=', sort: 1},
+        {name: '360搜索', target: 'https://www.so.com/s?q=', sort: 2}
+      ]
+    } else {
+      this.engines = JSON.parse(engineSetting)
+    }
     let engine = localStorage.getItem("engine")
     if (engine !== null) {
       if (engine === 'NaN'){
+        localStorage.setItem("engine", '1')
+      }
+      if (engine >= this.engines.length) {
         localStorage.setItem("engine", '1')
       }
       this.engine = parseInt(localStorage.getItem("engine"))

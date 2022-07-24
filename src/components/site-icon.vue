@@ -1,21 +1,33 @@
 <template>
   <div class="sites">
-    <div class="favorite-site"
-         v-for="(item, i) in favorites"
-         @click="jumpTo(item.url)"
-         @contextmenu.prevent="changeSite(i)">
-      <div class="icon" :style="`background-color: ${item.color}`">
-        {{ item.name.substring(0,1) }}
-      </div>
-      <span style="text-shadow: 0px 3px 10px rgba(0,0,0,0.34);">{{ item.name }}</span>
-    </div>
+    <!--使用draggable组件-->
+    <draggable v-model="favorites"
+               chosenClass="chosen"
+               forceFallback="true"
+               group="people"
+               animation="300"
+               @start="onStart"
+               @end="onEnd">
+      <transition-group>
+        <div class="favorite-site"
+             :key="item.sort === null ? i : item.sort"
+             v-for="(item, i) in favorites"
+             @click="jumpTo(item.url)"
+             @contextmenu.prevent="changeSite(i)">
+          <div class="icon" :style="`background-color: ${item.color}`">
+            {{ item.name.substring(0,1) }}
+          </div>
+          <span style="text-shadow: 0px 3px 10px rgba(0,0,0,0.34);">{{ item.name }}</span>
+        </div>
+      </transition-group>
+    </draggable>
     <div class="favorite-site" @click="changeSite(-1)" v-show="favorites.length < 12">
       <div class="icon" style="background-color: rgba(190,190,190,0.3)">
         +
       </div>
       <span style="text-shadow: 0px 3px 10px rgba(0,0,0,0.34);">添加</span>
     </div>
-<!--  网址弹出框  -->
+    <!--  网址弹出框  -->
     <el-dialog title="编辑网址收藏"
                :visible.sync="newSiteVisible"
                class="text-dialog"
@@ -57,9 +69,11 @@
 </template>
 
 <script>
+import draggable from 'vuedraggable'
 import siteSettingApi from "@/api/siteSettingApi";
 export default {
   name: "site-icon",
+  components: {draggable},
   data() {
     return {
       favorites: [],
@@ -73,15 +87,21 @@ export default {
       //输入框规则
       rules: {
         url: {type: "url"}
-      }
+      },
+      drag: false,
     }
   },
   methods: {
+    //开始拖拽事件
+    onStart(){
+      this.drag=true;
+    },
+    //拖拽结束事件
+    onEnd() {
+      this.drag=false;
+    },
     jumpTo(url) {
       window.open(url);
-    },
-    addSite() {
-
     },
     changeSite(index) {
       if (index !== -1) {
@@ -106,7 +126,6 @@ export default {
       }).then(() => {
         this.favorites.splice(this.tempIndex, 1)
         this.newSiteVisible = false;
-        //TODO
       })
     },
     submitChange() {
@@ -119,11 +138,13 @@ export default {
           this.favorites[this.tempIndex].color = this.tempColor
           this.favorites[this.tempIndex].url = this.tempSite
           this.favorites[this.tempIndex].name = this.tempName
+          this.favorites[this.tempIndex].sort = this.tempIndex
         } else {
           this.favorites.push({
             url: this.tempSite,
             name: this.tempName,
-            color: this.tempColor
+            color: this.tempColor,
+            sort: this.favorites.length
           })
         }
         this.newSiteVisible = false
@@ -164,31 +185,32 @@ export default {
       deep: true
     }
   },
-  async created() {
+  async mounted() {
     let item = localStorage.getItem("site");
     let isLogin = localStorage.getItem("login");
     if (isLogin === "1") {
       let jwt = localStorage.getItem("jwt");
       await siteSettingApi.get(jwt).then(
-          async res => {
+          res => {
             let fav = res.data.data
             if (fav !== null) {
               localStorage.setItem("site", JSON.stringify(fav))
             } else {
               if (item !== null && JSON.stringify(item) !== JSON.stringify(fav)) {
-                await siteSettingApi.update(jwt, JSON.parse(item))
+                siteSettingApi.update(jwt, JSON.parse(item))
               } else {
                 let sites = [
-                  {url: "https://www.bilibili.com", name: '哔哩哔哩', color: '#ff6cb2'},
-                  {url: "https://www.acfun.cn", name: 'AcFun', color: '#ff6d38'},
-                  {url: "https://www.baidu.com", name: '百度', color: '#0082ff'},
-                  {url: "https://map.baidu.com", name: '地图', color: '#00b677'},
-                  {url: "https://translate.google.cn/", name: '谷歌翻译', color: '#5290f5'},
-                  {url: "https://www.youdao.com", name: '有道翻译', color: '#f84a4a'},
+                  {url: "https://www.bilibili.com", name: '哔哩哔哩', color: '#ff6cb2', sort: 0},
+                  {url: "https://www.acfun.cn", name: 'AcFun', color: '#ff6d38', sort: 1},
+                  {url: "https://www.baidu.com", name: '百度', color: '#0082ff', sort: 2},
+                  {url: "https://map.baidu.com", name: '地图', color: '#00b677', sort: 3},
+                  {url: "https://translate.google.cn/", name: '谷歌翻译', color: '#5290f5', sort: 4},
+                  {url: "https://www.youdao.com", name: '有道翻译', color: '#f84a4a', sort: 5},
                 ]
                 localStorage.setItem("site", JSON.stringify(sites))
               }
             }
+            console.log(fav)
           }
       ).catch(
           error => {
@@ -208,15 +230,15 @@ export default {
       this.favorites = JSON.parse(siteItem)
     } else {
       this.favorites = [
-        {url: "https://www.bilibili.com", name: '哔哩哔哩', color: '#ff6cb2'},
-        {url: "https://www.acfun.cn", name: 'AcFun', color: '#ff6d38'},
-        {url: "https://www.baidu.com", name: '百度', color: '#0082ff'},
-        {url: "https://map.baidu.com", name: '地图', color: '#00b677'},
-        {url: "https://translate.google.cn/", name: '谷歌翻译', color: '#5290f5'},
-        {url: "https://www.youdao.com", name: '有道翻译', color: '#f84a4a'},
+        {url: "https://www.bilibili.com", name: '哔哩哔哩', color: '#ff6cb2', sort: 0},
+        {url: "https://www.acfun.cn", name: 'AcFun', color: '#ff6d38', sort: 1},
+        {url: "https://www.baidu.com", name: '百度', color: '#0082ff', sort: 2},
+        {url: "https://map.baidu.com", name: '地图', color: '#00b677', sort: 3},
+        {url: "https://translate.google.cn/", name: '谷歌翻译', color: '#5290f5', sort: 4},
+        {url: "https://www.youdao.com", name: '有道翻译', color: '#f84a4a', sort: 5},
       ]
     }
-  }
+  },
 }
 </script>
 

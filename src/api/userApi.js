@@ -66,5 +66,21 @@ export default {
       url: `${this.api}/modifyPasswordByOld`,
       data: userInfo
     })
+  },
+  //修改用户头像和用户名
+  updateUserInfo(jwt, avatar, username) {
+    return axios({
+      method: 'POST',
+      headers: {'token' : jwt},
+      url: `${this.api}/update?avatar=${avatar}&username=${username}`,
+    })
+  },
+  //获取用户名和头像
+  getUserInfo(jwt) {
+    return axios({
+      method: 'GET',
+      headers: {'token' : jwt},
+      url: `${this.api}/getUser`
+    })
   }
 }

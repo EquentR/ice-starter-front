@@ -26,7 +26,8 @@
       </span>
       <el-dropdown-menu slot="dropdown">
         <el-dropdown-item command="a">更换壁纸</el-dropdown-item>
-        <el-dropdown-item command="b" divided>修改密码</el-dropdown-item>
+        <el-dropdown-item command="b" divided v-show="isLogin">修改密码</el-dropdown-item>
+        <el-dropdown-item command="c">更多设置</el-dropdown-item>
 <!--        <el-dropdown-item command="b">登录</el-dropdown-item>-->
 <!--        <el-dropdown-item disabled>双皮奶</el-dropdown-item>-->
 <!--        <el-dropdown-item divided>蚵仔煎</el-dropdown-item>-->
@@ -43,6 +44,7 @@
     </footer>
 
 <!--    以下为弹出框内容   -->
+<!--  更换壁纸  -->
     <el-dialog
         title="更换壁纸"
         :visible.sync="changeBackgroundVisible"
@@ -69,7 +71,36 @@
         ref="file"
         @change="uploadFile"
         style="display: none;"
-        id="file" accept="image/*"></input>
+        id="file" accept="image/*"/>
+
+<!--  设置对话框  -->
+    <el-dialog
+        title="设置"
+        :visible.sync="settingVisible"
+        width="550px"
+        class="settingBox"
+        :append-to-body="true"
+        :close-on-click-modal="false">
+      <el-tabs v-model="activeName">
+        <el-tab-pane label="用户设置" name="first">
+          <UserSetting/>
+        </el-tab-pane>
+
+        <el-tab-pane label="搜索引擎设置" name="second">
+          <el-scrollbar>
+            <EngineSetting/>
+          </el-scrollbar>
+
+        </el-tab-pane>
+
+        <el-tab-pane label="关于" name="third">
+          <el-scrollbar>
+            <about/>
+          </el-scrollbar>
+        </el-tab-pane>
+
+      </el-tabs>
+    </el-dialog>
   </div>
 </template>
 
@@ -78,10 +109,13 @@ import login from "@/components/login";
 import userApi from "@/api/userApi";
 import ossApi from "@/api/ossApi";
 import userSettingApi from "@/api/userSettingApi";
-
+import About from "@/components/about";
+import UserSetting from "@/components/user-setting";
+import EngineSetting from "@/components/engine-setting";
 
 export default {
   name: "background",
+  components: {EngineSetting, UserSetting, About},
   data() {
     return {
       is_dark: true,
@@ -89,6 +123,8 @@ export default {
       firstIn: true,
       theme: this.$store.state.theme,
       changeBackgroundVisible: false,
+      settingVisible: false,
+      activeName: 'first',
       imgBase64: '',
       isBackgroundChange: false,
       userInfo: null,
@@ -119,13 +155,19 @@ export default {
         }
       )
     },
+    //下拉菜单
     handleCommand(e) {
-      if (e === 'a') {
+      /*if (e === 'a') {
         this.changeBackgroundVisible = true
       } else if (e === 'b') {
         this.$router.push({
           name: 'changePass'
         })
+      }*/
+      switch (e) {
+        case 'a' : this.changeBackgroundVisible = true; break;
+        case 'b' : this.$router.push({name: 'changePass'}); break;
+        case 'c' : this.settingVisible = true; break;
       }
     },
     changeBackground() {
@@ -271,6 +313,11 @@ export default {
       }).catch(() => {
 
       });
+    },
+    //重新获取用户名
+    reGetName(username) {
+      this.userInfo.userName = username
+      console.log(username)
     }
   },
   watch: {
@@ -306,6 +353,7 @@ export default {
     }
   },
   async mounted() {
+    this.$bus.$on('reGetName', this.reGetName)
     localStorage.setItem("login", "0");
     //登录状态校验
     let jwt = localStorage.getItem("jwt");
@@ -433,6 +481,9 @@ footer a {
   font-size: 15px;
   float: left;
 }
+.settingBox .el-dialog {
+  height: 500px !important;
+}
 </style>
 
 <style>
@@ -451,18 +502,22 @@ footer a {
   transition: 0.3s;
   transition-timing-function: ease-in-out;
 }
+.el-dialog__body {
+  transition: 0.3s;
+  transition-timing-function: ease-in-out;
+}
 @media screen and (max-width: 900px) {
-  .el-dialog{
+  .changeBackground .el-dialog{
     width: 50% !important;
   }
 }
 @media screen and (max-width: 750px) {
-  .el-dialog{
+  .changeBackground .el-dialog{
     width: 60% !important;
   }
 }
 @media screen and (max-width: 600px) {
-  .el-dialog{
+  .changeBackground .el-dialog{
     width: 80% !important;
   }
 }

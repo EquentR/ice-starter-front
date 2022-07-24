@@ -15,7 +15,9 @@
     "jsonp": "^0.2.1",
     "vue": "^2.6.14",
     "vue-clipboard2": "^0.3.3",
+    "vue-cropper": "^0.5.8",
     "vue-router": "^3.5.4",
+    "vuedraggable": "^2.24.3",
     "vuex": "^3.6.2"
   },
   "devDependencies": {
