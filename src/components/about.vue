@@ -37,7 +37,8 @@ export default {
 <style scoped>
 .about {
   text-align: left;
-  height: 350px;
+  height: 352px;
+  margin-left: 10px;
 }
 .content a{
   color: #00778c;

@@ -15,9 +15,8 @@
              v-for="(item, index) in engines"
              :key="item.sort"
              @click="changeEngine(index)">
-          <div>{{ item.name }}
-            <span class="searchEngUrl" id="baiduSearchEngUrl">{{ item.target }}</span>
-          </div>
+          <span>{{ item.name }}</span>
+          <span class="searchEngUrl" id="baiduSearchEngUrl">{{ item.target }}</span>
         </div>
       </transition-group>
     </draggable>
@@ -25,7 +24,7 @@
 <!--  增加搜索引擎  -->
     <el-dialog :visible.sync="addEngineVisible"
                width="400px"
-               title="添加搜索引擎"
+               title="设置搜索引擎"
                :append-to-body="true"
                :close-on-click-modal="false">
       <div class="add-engine">
@@ -211,13 +210,16 @@ export default {
 </script>
 
 <style scoped>
+.engine-setting {
+  max-height: 352px;
+}
 .engine-item {
   height: 30px;
   border-top: solid 1px #c4c4c4;
 
 }
 .searchEngListItem {
-  padding: 10px 30px;
+  padding: 10px 26px;
   border-radius: 3px;
   cursor: pointer;
   transition-timing-function: ease-in-out;
@@ -229,8 +231,8 @@ export default {
 }
 
 .searchEngUrl {
-  position: absolute;
-  left: 100px;
+  position: sticky;
+  left: 110px;
 }
 
 .add-engine {
