@@ -27,6 +27,7 @@
       <el-dropdown-menu slot="dropdown">
         <el-dropdown-item command="a">更换壁纸</el-dropdown-item>
         <el-dropdown-item command="b" divided v-show="isLogin">修改密码</el-dropdown-item>
+        <el-dropdown-item command="d">修复起始页</el-dropdown-item>
         <el-dropdown-item command="c">更多设置</el-dropdown-item>
 <!--        <el-dropdown-item command="b">登录</el-dropdown-item>-->
 <!--        <el-dropdown-item disabled>双皮奶</el-dropdown-item>-->
@@ -81,7 +82,7 @@
         class="settingBox"
         :append-to-body="true"
         :close-on-click-modal="false">
-      <el-tabs v-model="activeName">
+      <el-tabs v-model="activeName" type="card">
         <el-tab-pane label="用户设置" name="first">
           <UserSetting/>
         </el-tab-pane>
@@ -109,6 +110,8 @@ import login from "@/components/login";
 import userApi from "@/api/userApi";
 import ossApi from "@/api/ossApi";
 import userSettingApi from "@/api/userSettingApi";
+import engineApi from "@/api/engineApi";
+import siteSettingApi from "@/api/siteSettingApi";
 import About from "@/components/about";
 import UserSetting from "@/components/user-setting";
 import EngineSetting from "@/components/engine-setting";
@@ -168,8 +171,66 @@ export default {
         case 'a' : this.changeBackgroundVisible = true; break;
         case 'b' : this.$router.push({name: 'changePass'}); break;
         case 'c' : this.settingVisible = true; break;
+        case 'd' : this.fixStarter(); break;
       }
     },
+    fixStarter() {
+      const h = this.$createElement;
+      this.$msgbox({
+        title: '警告',
+        message: h('div', null, [
+          h('p', {}, [
+            h('span', {}, '此操作可以修复起始页不正常显示的大部分问题，请先尝试点击确定操作，如果操作无效，再尝试'),
+            h('span', {
+              style: 'color: #419efa; cursor: pointer',
+              on: {
+                click: this.fixAccount
+              }
+            }, ' 深度修复（修复账号）'),
+          ]),
+          h('p', null, [
+            h('span', { style: 'color: red'}, '注意，此操作将清空浏览器存储，如果未登录，自定义信息将会丢失'),
+            h('span', { style: 'color: black' }, '，是否继续？')
+          ])
+        ]),
+        showCancelButton: true,
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+      }).then( () => {
+        localStorage.clear()
+        window.location.reload()
+      });
+    },
+    //清除账户信息
+    fixAccount() {
+      this.$msgbox.close()
+      const h = this.$createElement;
+      this.$msgbox({
+        title: '清除账户自定义信息',
+        message: h('div', null, [
+          h('p', {}, [
+            h('span', {}, '此操作可以彻底修复起始页不正常显示的问题，但是这将'),
+            h('span', {style: 'color: red'}, '清除全部账户数据'),
+            h('span', {}, '（除账号、密码、邮箱、头像信息）')
+          ]),
+          h('p', null, [
+            h('span', { style: 'color: FF1E04; font-weight: bold'}, '注意，此操作将清空账户信息，自定义信息将会丢失，此过程没有二次确认！无法恢复，请三思！'),
+            h('span', { style: 'color: black' }, '，是否继续？')
+          ])
+        ]),
+        showCancelButton: true,
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+      }).then(() => {
+        let jwt = localStorage.getItem("jwt");
+        userSettingApi.clear(jwt)
+        engineApi.clear(jwt)
+        siteSettingApi.clear(jwt)
+        localStorage.clear()
+        window.location.reload()
+      });
+    },
+
     changeBackground() {
       this.$refs.file.click()
     },
@@ -183,12 +244,13 @@ export default {
       var file = document.querySelector('input[type=file]').files[0]
       if (this.isLogin) {
         let formData = new FormData()
+        let jwt = localStorage.getItem("jwt")
         formData.append("file", file);
-        ossApi.uploadImage(formData).then(
+        ossApi.uploadBG(jwt, formData).then(
           response => {
-            loading.close()
             this.imgBase64 = response.data.data.url;
             document.getElementById("background").src = this.imgBase64
+            loading.close()
             this.isBackgroundChange = true;
           }
         ).catch(
@@ -490,7 +552,7 @@ footer a {
 .el-dropdown-link {
   cursor: pointer;
   color: #ffffff;
-  text-shadow: 0px 0px 5px #0000001A;;
+  text-shadow: 0 0 5px #0000001A;;
 }
 .el-dropdown {
   font-size: 20px !important;
@@ -531,5 +593,7 @@ footer a {
   color: #ffffff !important;
   font-size: 25px !important;
 }
-
+.el-message-box {
+  border-radius: 10px !important;
+}
 </style>

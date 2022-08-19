@@ -20,5 +20,13 @@ export default {
       url: `${this.api}`,
       headers: {'token' : jwt},
     })
+  },
+  //清空
+  clear(jwt) {
+    return axios({
+      method: 'DELETE',
+      url: `${this.api}`,
+      headers: {'token' : jwt},
+    })
   }
 }

@@ -15,10 +15,13 @@
       <input v-if="changeUsername" class="user-input" type="text" placeholder="用户名" v-model="userInfo.username" autocomplete="off">
       <h5 v-else class="username">用户名：{{ userInfo.username }}</h5>
       <el-checkbox v-model="changeUsername" @change="changeUserName">修改</el-checkbox><br/><br/>
+      <router-link to="/deleteAccount" class="delete-account">注销（删除）账号</router-link><br/>
+      <router-link to="/restoreAccount" class="delete-account">恢复注销的账号（7天内有效）</router-link><br/>
     </div>
     <div v-else class="avatar-username">
       <h5>您还未登录，此页面需要用户登录后才可使用</h5>
       <button @click="login" class="submit">登录</button><br/><br/>
+      <router-link to="/restoreAccount" class="delete-account">恢复注销的账号（7天内有效）</router-link>
     </div>
 
 <!--  裁切工具  -->
@@ -142,8 +145,9 @@ export default {
       this.$refs.cropper.getCropBlob(data => {
         let file = new File([data], "avatar.png", {type: "image/", lastModified: Date.now()});
         let formData = new FormData()
+        let jwt = localStorage.getItem("jwt")
         formData.append("file", file);
-        ossApi.uploadImage(formData).then(
+        ossApi.uploadAvatar(jwt, formData).then(
           res => {
             let url = res.data.data.url;
             let jwt = localStorage.getItem("jwt")
@@ -281,6 +285,11 @@ export default {
 }
 .submit:active{
   background: #67bfd6 0% 0% no-repeat padding-box;
+}
+.delete-account {
+  text-decoration: none;
+  color: #7d6fa4;
+  font-size: 12px;
 }
 </style>
 

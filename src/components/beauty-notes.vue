@@ -100,10 +100,10 @@ export default {
   text-shadow: 0px 0px 5px #0000001A;
   padding: 0.5em 1em;
   margin-top: 2em;
-  transition: 0.2s;
+  transition: background-color 0.2s;
   transition-timing-function: ease-in-out;
   border-radius: 20px;
-  width: 45vw !important;
+  width: 600px !important;
 }
 .note:hover {
   background-color: rgba(0, 0, 0, 0.11);
@@ -117,17 +117,10 @@ export default {
   box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.19);
   transition: 0.2s;
 }
-/*当屏幕宽度小于960px生效*/
-@media screen and (max-width: 960px) {
+/*当屏幕宽度小于700px生效*/
+@media screen and (max-width: 700px) {
   .note{
     width: 90vw !important;
-  }
-}
-
-/*当屏幕宽度大于1700px生效*/
-@media screen and (min-width: 1700px) {
-  .note{
-    width: 35vw !important;
   }
 }
 /*当屏幕宽度小于600且高度小于745，不显示句子*/

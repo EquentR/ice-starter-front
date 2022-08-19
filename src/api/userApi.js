@@ -82,5 +82,19 @@ export default {
       headers: {'token' : jwt},
       url: `${this.api}/getUser`
     })
+  },
+  //删除用户
+  deleteUser(email, code) {
+    return axios({
+      method: "DELETE",
+      url: `${this.api}/deleteAccount?email=${email}&code=${code}`
+    })
+  },
+  //恢复用户
+  restoreUser(email, userName, code) {
+    return axios({
+      method: "GET",
+      url: `${this.api}/restoreAccount?email=${email}&code=${code}&userName=${userName}`
+    })
   }
 }

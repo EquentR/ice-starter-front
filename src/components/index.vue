@@ -19,7 +19,7 @@
         <div slot="prepend">
           <div class="centerClass">
             <el-select v-model="engine" placeholder="请选择" style="width: 100px" default-first-option>
-              <el-option v-for="(item, i) in engines" :label="item.name" :value="i+1" :key="i"></el-option>
+              <el-option v-for="(item, i) in engines.props" :label="item.name" :value="i+1" :key="i"></el-option>
             </el-select>
           </div>
         </div>
@@ -49,14 +49,14 @@ export default {
       suggest: [],
       is_dark: true,
       nowTime: '',
-      engines: []
+      engines: {props:[]}
     }
   },
   methods: {
     search() {
-      for (let i = 0; i < this.engines.length; i++) {
+      for (let i = 0; i < this.engines.props.length; i++) {
         if (this.engine === i+1) {
-          let url = `${this.engines[i].target}${this.keyWord}`
+          let url = `${this.engines.props[i].target}${this.keyWord}`
           window.open(url);
         }
       }
@@ -97,8 +97,10 @@ export default {
       this.engines = engines
     }
   },
-  filters: {
-
+  computed: {
+    enginesCopy() {
+      return JSON.stringify(this.engines);
+    }
   },
   watch: {
     keyWord() {
@@ -115,15 +117,18 @@ export default {
         }, localStorage.getItem("jwt"))
       }
     },
-    engines: {
+    enginesCopy: {
       deep: true,
-      handler() {
+      handler(newEngine, oldEngine) {
         localStorage.setItem("engineSetting", JSON.stringify(this.engines))
         let login = localStorage.getItem("login")
         if (login === "1") {
-          engineApi.update(localStorage.getItem("jwt"), this.engines)
+          console.log(newEngine)
+          console.log(oldEngine)
+          if (newEngine !== oldEngine && oldEngine !== "{\"props\":[]}") {
+            engineApi.update(localStorage.getItem("jwt"), this.engines.props)
+          }
         }
-
       }
     }
   },
@@ -145,32 +150,35 @@ export default {
         }
       )
     }
+    let defaultEngines = {
+      props: [
+        {name: '百度', target: 'https://www.baidu.com/s?ie=UTF-8&wd=', sort: 0},
+        {name: '必应', target: 'https://cn.bing.com/search?q=', sort: 1},
+        {name: '360搜索', target: 'https://www.so.com/s?q=', sort: 2}
+      ]
+    }
     //搜索引擎偏好设定
     if (isLogin === "1") {
       await engineApi.get(jwt).then(
         res => {
           let engines = res.data.data
-          localStorage.removeItem("engineSetting")
           localStorage.setItem("engineSetting", JSON.stringify(engines))
         }
       ).catch(
         error => {
-          this.engines = [
-            {name: '百度', target: 'https://www.baidu.com/s?ie=UTF-8&wd=', sort: 0},
-            {name: '必应', target: 'https://cn.bing.com/search?q=', sort: 1},
-            {name: '360搜索', target: 'https://www.so.com/s?q=', sort: 2}
-          ]
+          localStorage.setItem("engineSetting", JSON.stringify(defaultEngines))
         }
       )
     }
     let engineSetting = localStorage.getItem("engineSetting")
-    console.log(engineSetting)
     if (engineSetting === null) {
-      this.engines = [
-        {name: '百度', target: 'https://www.baidu.com/s?ie=UTF-8&wd=', sort: 0},
-        {name: '必应', target: 'https://cn.bing.com/search?q=', sort: 1},
-        {name: '360搜索', target: 'https://www.so.com/s?q=', sort: 2}
-      ]
+      this.engines = {
+        props: [
+          {name: '百度', target: 'https://www.baidu.com/s?ie=UTF-8&wd=', sort: 0},
+          {name: '必应', target: 'https://cn.bing.com/search?q=', sort: 1},
+          {name: '360搜索', target: 'https://www.so.com/s?q=', sort: 2}
+        ]
+      }
     } else {
       this.engines = JSON.parse(engineSetting)
     }
@@ -216,8 +224,8 @@ a{
   width: 600px !important;
   opacity: 0.8;
   box-shadow: 0px 3px 10px #0000001A;
-  /*transition: 0.2s;*/
-  /*transition-timing-function: ease-in-out;*/
+  transition: background-color 0.2s;
+  transition-timing-function: ease-in-out;
 }
 /*当屏幕宽度小于960px生效*/
 @media screen and (max-width: 667px) {

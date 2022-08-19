@@ -3,7 +3,7 @@
     <h4 style="text-align: center">你可以对搜索引擎进行排序，也可以
       <span style="color: #00778c;cursor: pointer" @click="changeEngine(-1)">添加</span>
       新的引擎</h4>
-    <draggable v-model="engines"
+    <draggable v-model="engines.props"
                chosenClass="chosen"
                forceFallback="true"
                group="people"
@@ -12,7 +12,7 @@
                @end="onEnd">
       <transition-group>
         <div class="searchEngListItem"
-             v-for="(item, index) in engines"
+             v-for="(item, index) in engines.props"
              :key="item.sort"
              @click="changeEngine(index)">
           <span>{{ item.name }}</span>
@@ -70,7 +70,7 @@ export default {
   components: {draggable},
   data() {
     return {
-      engines: [],
+      engines: {props:[]},
       drag: false,
       addEngineVisible: false,
       tempName: '',
@@ -108,8 +108,8 @@ export default {
     },
     changeEngine(index) {
       if (index !== -1) {
-        this.tempSite = this.engines[index].target
-        this.tempName = this.engines[index].name
+        this.tempSite = this.engines.props[index].target
+        this.tempName = this.engines.props[index].name
         this.tempIndex = index
         this.canDelete = true
       } else {
@@ -127,14 +127,14 @@ export default {
       if (isValid && !isEmpty) {
         this.tempSite = this.tempSite.startsWith("http") ? this.tempSite : "https://" + this.tempSite
         if (this.tempIndex >= 0) {
-          this.engines[this.tempIndex].target = this.tempSite
-          this.engines[this.tempIndex].name = this.tempName
-          this.engines[this.tempIndex].sort = this.tempIndex
+          this.engines.props[this.tempIndex].target = this.tempSite
+          this.engines.props[this.tempIndex].name = this.tempName
+          this.engines.props[this.tempIndex].sort = this.tempIndex
         } else {
-          this.engines.push({
+          this.engines.props.push({
             target: this.tempSite,
             name: this.tempName,
-            sort: this.engines.length
+            sort: this.engines.props.length
           })
         }
         this.addEngineVisible = false
@@ -159,7 +159,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        this.engines.splice(this.tempIndex, 1)
+        this.engines.props.splice(this.tempIndex, 1)
         this.addEngineVisible = false;
       })
     }
@@ -186,22 +186,26 @@ export default {
         }
       ).catch(
         error => {
-          this.engines = [
-            {name: '百度', target: 'https://www.baidu.com/s?ie=UTF-8&wd=', sort: 0},
-            {name: '必应', target: 'https://cn.bing.com/search?q=', sort: 1},
-            {name: '360搜索', target: 'https://www.so.com/s?q=', sort: 2}
-          ]
+          this.engines = {
+            props: [
+              {name: '百度', target: 'https://www.baidu.com/s?ie=UTF-8&wd=', sort: 0},
+              {name: '必应', target: 'https://cn.bing.com/search?q=', sort: 1},
+              {name: '360搜索', target: 'https://www.so.com/s?q=', sort: 2}
+            ]
+          }
         }
       )
     }
     let engineSetting = localStorage.getItem("engineSetting")
     console.log(engineSetting)
     if (engineSetting === null) {
-      this.engines = [
-        {name: '百度', target: 'https://www.baidu.com/s?ie=UTF-8&wd=', sort: 0},
-        {name: '必应', target: 'https://cn.bing.com/search?q=', sort: 1},
-        {name: '360搜索', target: 'https://www.so.com/s?q=', sort: 2}
-      ]
+      this.engines = {
+        props: [
+          {name: '百度', target: 'https://www.baidu.com/s?ie=UTF-8&wd=', sort: 0},
+          {name: '必应', target: 'https://cn.bing.com/search?q=', sort: 1},
+          {name: '360搜索', target: 'https://www.so.com/s?q=', sort: 2}
+        ]
+      }
     } else {
       this.engines = JSON.parse(engineSetting)
     }

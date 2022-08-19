@@ -57,7 +57,8 @@ export default {
                   position: 'top-right'
                 });
                 setTimeout(() => {
-                  this.$router.push({name: 'naviMain'})
+                  //this.$router.push({name: 'naviMain'})
+                  location.href = "/"
                 }, 1000)
               }
             }

@@ -1,7 +1,7 @@
 <template>
   <div class="sites">
     <!--使用draggable组件-->
-    <draggable v-model="favorites"
+    <draggable v-model="favorites.props"
                chosenClass="chosen"
                forceFallback="true"
                group="people"
@@ -11,21 +11,21 @@
       <transition-group>
         <div class="favorite-site"
              :key="item.sort === null ? i : item.sort"
-             v-for="(item, i) in favorites"
+             v-for="(item, i) in favorites.props"
              @click="jumpTo(item.url)"
              @contextmenu.prevent="changeSite(i)">
           <div class="icon" :style="`background-color: ${item.color}`">
             {{ item.name.substring(0,1) }}
           </div>
-          <span style="text-shadow: 0px 3px 10px rgba(0,0,0,0.34);">{{ item.name }}</span>
+          <span style="text-shadow: 0 3px 10px rgba(0,0,0,0.34);">{{ item.name }}</span>
         </div>
       </transition-group>
     </draggable>
-    <div class="favorite-site" @click="changeSite(-1)" v-show="favorites.length < 12">
+    <div class="favorite-site" @click="changeSite(-1)" v-show="favorites.props.length < 12">
       <div class="icon" style="background-color: rgba(190,190,190,0.3)">
         +
       </div>
-      <span style="text-shadow: 0px 3px 10px rgba(0,0,0,0.34);">添加</span>
+      <span style="text-shadow: 0 3px 10px rgba(0,0,0,0.34);">添加</span>
     </div>
     <!--  网址弹出框  -->
     <el-dialog title="编辑网址收藏"
@@ -76,7 +76,7 @@ export default {
   components: {draggable},
   data() {
     return {
-      favorites: [],
+      favorites: {props:[]},
       newSiteVisible: false,
       tempColor: "#528eec",
       tempSite: "",
@@ -105,9 +105,9 @@ export default {
     },
     changeSite(index) {
       if (index !== -1) {
-        this.tempSite = this.favorites[index].url
-        this.tempName = this.favorites[index].name
-        this.tempColor = this.favorites[index].color
+        this.tempSite = this.favorites.props[index].url
+        this.tempName = this.favorites.props[index].name
+        this.tempColor = this.favorites.props[index].color
         this.tempIndex = index
         this.canDelete = true
       } else {
@@ -124,7 +124,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        this.favorites.splice(this.tempIndex, 1)
+        this.favorites.props.splice(this.tempIndex, 1)
         this.newSiteVisible = false;
       })
     },
@@ -135,16 +135,16 @@ export default {
       if (isValid && !isEmpty) {
         this.tempSite = this.tempSite.startsWith("http") ? this.tempSite : "https://" + this.tempSite
         if (this.tempIndex >= 0) {
-          this.favorites[this.tempIndex].color = this.tempColor
-          this.favorites[this.tempIndex].url = this.tempSite
-          this.favorites[this.tempIndex].name = this.tempName
-          this.favorites[this.tempIndex].sort = this.tempIndex
+          this.favorites.props[this.tempIndex].color = this.tempColor
+          this.favorites.props[this.tempIndex].url = this.tempSite
+          this.favorites.props[this.tempIndex].name = this.tempName
+          this.favorites.props[this.tempIndex].sort = this.tempIndex
         } else {
-          this.favorites.push({
+          this.favorites.props.push({
             url: this.tempSite,
             name: this.tempName,
             color: this.tempColor,
-            sort: this.favorites.length
+            sort: this.favorites.props.length
           })
         }
         this.newSiteVisible = false
@@ -178,7 +178,7 @@ export default {
         if (isLogin === "1") {
           if (newList !== oldList){
             let jwt = localStorage.getItem("jwt");
-            siteSettingApi.update(jwt, this.favorites)
+            siteSettingApi.update(jwt, this.favorites.props)
           }
         }
       },
@@ -197,16 +197,18 @@ export default {
               localStorage.setItem("site", JSON.stringify(fav))
             } else {
               if (item !== null && JSON.stringify(item) !== JSON.stringify(fav)) {
-                siteSettingApi.update(jwt, JSON.parse(item))
+                siteSettingApi.update(jwt, JSON.parse(item).props)
               } else {
-                let sites = [
-                  {url: "https://www.bilibili.com", name: '哔哩哔哩', color: '#ff6cb2', sort: 0},
-                  {url: "https://www.acfun.cn", name: 'AcFun', color: '#ff6d38', sort: 1},
-                  {url: "https://www.baidu.com", name: '百度', color: '#0082ff', sort: 2},
-                  {url: "https://map.baidu.com", name: '地图', color: '#00b677', sort: 3},
-                  {url: "https://translate.google.cn/", name: '谷歌翻译', color: '#5290f5', sort: 4},
-                  {url: "https://www.youdao.com", name: '有道翻译', color: '#f84a4a', sort: 5},
-                ]
+                let sites = {
+                  props: [
+                    {url: "https://www.bilibili.com", name: '哔哩哔哩', color: '#ff6cb2', sort: 0},
+                    {url: "https://www.acfun.cn", name: 'AcFun', color: '#ff6d38', sort: 1},
+                    {url: "https://www.baidu.com", name: '百度', color: '#0082ff', sort: 2},
+                    {url: "https://map.baidu.com", name: '地图', color: '#00b677', sort: 3},
+                    {url: "https://translate.google.cn/", name: '谷歌翻译', color: '#5290f5', sort: 4},
+                    {url: "https://www.youdao.com", name: '有道翻译', color: '#f84a4a', sort: 5},
+                  ]
+                }
                 localStorage.setItem("site", JSON.stringify(sites))
               }
             }
@@ -214,13 +216,13 @@ export default {
           }
       ).catch(
           error => {
-            this.$notify({
+            /*this.$notify({
               title: '错误',
               message: `${error.response.data.data}`,
               type: 'error',
               duration: 5000,
               position: 'top-right'
-            });
+            });*/
           }
       )
     }
@@ -229,14 +231,16 @@ export default {
     if (siteItem !== 'null' && siteItem !== null) {
       this.favorites = JSON.parse(siteItem)
     } else {
-      this.favorites = [
-        {url: "https://www.bilibili.com", name: '哔哩哔哩', color: '#ff6cb2', sort: 0},
-        {url: "https://www.acfun.cn", name: 'AcFun', color: '#ff6d38', sort: 1},
-        {url: "https://www.baidu.com", name: '百度', color: '#0082ff', sort: 2},
-        {url: "https://map.baidu.com", name: '地图', color: '#00b677', sort: 3},
-        {url: "https://translate.google.cn/", name: '谷歌翻译', color: '#5290f5', sort: 4},
-        {url: "https://www.youdao.com", name: '有道翻译', color: '#f84a4a', sort: 5},
-      ]
+      this.favorites = {
+        props: [
+          {url: "https://www.bilibili.com", name: '哔哩哔哩', color: '#ff6cb2', sort: 0},
+          {url: "https://www.acfun.cn", name: 'AcFun', color: '#ff6d38', sort: 1},
+          {url: "https://www.baidu.com", name: '百度', color: '#0082ff', sort: 2},
+          {url: "https://map.baidu.com", name: '地图', color: '#00b677', sort: 3},
+          {url: "https://translate.google.cn/", name: '谷歌翻译', color: '#5290f5', sort: 4},
+          {url: "https://www.youdao.com", name: '有道翻译', color: '#f84a4a', sort: 5},
+        ]
+      }
     }
   },
 }
@@ -322,14 +326,14 @@ export default {
   margin-top: 16px;
   width: 500px;
   height: 50px;
-  background: #8f82b5 0% 0% no-repeat padding-box;
-  box-shadow: 0px 0px 3px #00000029;
+  background: #8f82b5 0 0 no-repeat padding-box;
+  box-shadow: 0 0 3px #00000029;
   border-radius: 15px;
   opacity: 1;
   font: normal normal normal 18px Source Han Sans SC;
-  letter-spacing: 0px;
+  letter-spacing: 0;
   color: #FFFFFF;
-  border: 0px;
+  border: 0;
   outline-style: none;
   transition-duration: 0.2s;
 }
